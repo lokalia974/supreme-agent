@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Suprême — Agent Vocal IA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0D0D0D;--surface:#1A1A1A;--surface2:#242424;--gold:#FFB800;--white:#F5F5F0;--muted:#666;--green:#00D26A;--red:#FF4D6D;--border:rgba(255,255,255,0.08)}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo-box{width:44px;height:44px;border-radius:12px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.brand{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.agent-status{display:flex;align-items:center;gap:5px;font-size:11px;margin-top:2px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.dot.active{background:var(--green);animation:pulse 2s infinite}
+.dot.speaking{background:var(--gold);animation:pulse 0.5s infinite}
+.dot.listening{background:var(--red);animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+.cuisine-link{background:rgba(255,184,0,0.15);border:1px solid rgba(255,184,0,0.3);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;text-decoration:none}
+
+/* AVATAR SECTION */
+.avatar-section{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:28px 20px 20px}
+.avatar-ring{width:110px;height:110px;border-radius:50%;background:var(--surface);border:3px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;transition:all 0.3s}
+.avatar-ring.listening{border-color:var(--red);box-shadow:0 0 0 8px rgba(255,77,109,0.1),0 0 0 16px rgba(255,77,109,0.05)}
+.avatar-ring.speaking{border-color:var(--gold);box-shadow:0 0 0 8px rgba(255,184,0,0.1),0 0 0 16px rgba(255,184,0,0.05)}
+.avatar-ring.thinking{border-color:var(--green);box-shadow:0 0 0 8px rgba(0,210,106,0.1)}
+.avatar-emoji{font-size:46px}
+.avatar-label{margin-top:14px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted);letter-spacing:0.5px}
+.avatar-label.listening{color:var(--red)}
+.avatar-label.speaking{color:var(--gold)}
+.avatar-label.thinking{color:var(--green)}
+
+/* WAVE BARS */
+.wave-bars{display:flex;gap:4px;align-items:center;height:30px;margin-top:8px}
+.bar{width:4px;border-radius:2px;background:var(--muted);transition:all 0.1s}
+.wave-bars.listening .bar{background:var(--red);animation:wavebar 0.8s infinite}
+.wave-bars.speaking .bar{background:var(--gold);animation:wavebar 0.6s infinite}
+.wave-bars.thinking .bar{background:var(--green);animation:wavebar 1.2s infinite}
+.bar:nth-child(1){animation-delay:0s;height:6px}
+.bar:nth-child(2){animation-delay:0.1s;height:12px}
+.bar:nth-child(3){animation-delay:0.2s;height:20px}
+.bar:nth-child(4){animation-delay:0.3s;height:14px}
+.bar:nth-child(5){animation-delay:0.4s;height:8px}
+.bar:nth-child(6){animation-delay:0.2s;height:18px}
+.bar:nth-child(7){animation-delay:0.1s;height:10px}
+@keyframes wavebar{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1.8)}}
+
+/* CONVERSATION */
+.convo-wrap{flex:1;overflow-y:auto;padding:0 16px 12px}
+.msg{max-width:85%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.55;margin-bottom:8px;animation:fadein 0.3s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg.ai{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px;margin-right:auto}
+.msg.user{background:var(--gold);color:#000;font-weight:500;border-bottom-right-radius:4px;margin-left:auto}
+
+/* ORDER CARD */
+.order-card{background:var(--surface);border:1.5px solid rgba(255,184,0,0.4);border-radius:16px;padding:14px 16px;margin:0 16px 12px;display:none}
+.order-card.show{display:block}
+.order-title{font-family:'Syne',sans-serif;font-size:13px;color:var(--gold);margin-bottom:10px}
+.order-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px}
+.order-row:last-child{border-bottom:none}
+.order-key{color:var(--muted)}
+.order-val{color:var(--white);font-weight:500;text-align:right;max-width:60%}
+.sent-tag{background:rgba(0,210,106,0.15);border:1px solid rgba(0,210,106,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--green);text-align:center;margin-top:10px}
+
+/* BOTTOM CONTROLS */
+.bottom-controls{flex-shrink:0;padding:14px 16px 32px;background:var(--bg);border-top:1px solid var(--border)}
+.main-btn{width:100%;padding:18px;border:none;border-radius:16px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.main-btn.idle{background:var(--gold);color:#000}
+.main-btn.listening{background:var(--red);color:#fff;animation:btnpulse 1.5s infinite}
+.main-btn.speaking{background:var(--surface);color:var(--gold);border:2px solid var(--gold)}
+.main-btn.thinking{background:var(--surface2);color:var(--green)}
+@keyframes btnpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,109,0.3)}50%{box-shadow:0 0 0 16px rgba(255,77,109,0)}}
+.btn-hint{text-align:center;font-size:11px;color:var(--muted);margin-top:8px}
+.reset-btn{display:block;margin:10px auto 0;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-box">🔥</div>
+    <div>
+      <div class="brand">Suprême 974</div>
+      <div class="agent-status">
+        <div class="dot active" id="status-dot"></div>
+        <span id="status-text">Agent prêt</span>
+      </div>
+    </div>
+  </div>
+  <a href="supreme_cuisine.html" class="cuisine-link">👨‍🍳 Cuisine</a>
+</div>
+
+<div class="avatar-section">
+  <div class="avatar-ring" id="avatar-ring">
+    <div class="avatar-emoji">🤖</div>
+  </div>
+  <div class="avatar-label" id="avatar-label">AGENT SUPRÊME</div>
+  <div class="wave-bars" id="wave-bars">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+</div>
+
+<div class="convo-wrap" id="convo-wrap"></div>
+
+<div class="order-card" id="order-card">
+  <div class="order-title">📋 Commande enregistrée</div>
+  <div id="order-details"></div>
+  <div class="sent-tag" id="sent-tag" style="display:none">✅ Envoyé en cuisine automatiquement !</div>
+</div>
+
+<div class="bottom-controls">
+  <button class="main-btn idle" id="main-btn" onclick="toggleListen()">
+    <span id="btn-icon">🎙️</span>
+    <span id="btn-text">Appuyer pour parler</span>
+  </button>
+  <div class="btn-hint" id="btn-hint">Appuie et parle — l'agent te répond à voix haute</div>
+  <button class="reset-btn" onclick="resetConvo()">🔄 Nouvelle conversation</button>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `Tu es l'agent vocal du restaurant Suprême à Saint-Denis, La Réunion. Tu prends les commandes à emporter par téléphone.
+
+Sois chaleureux, poli et professionnel. Tutoie le client naturellement.
+
+MENU COMPLET :
+🥙 Kebab 12,90€ | Kebab Berliner 14,90€ | Kebab Végé 12,90€
+🌯 Tacos 13,90€ | Tacos Chèvre Miel 14,90€ | Double Tacos 25,90€ (1 acheté = 1 offert)
+🥙 Dürüm 12,90€ | Dürüm Berliner 13,90€ | Dürüm Végé 12,90€
+🍔 Burger Maison 12,90€ | Burger Seguin 14,90€
+🍗 Chicken Tenders 11,90€
+🍟 Frites 4,00€
+🥤 Coca Cola/Zero 3€ | Lipton Ice Tea 3€ | Lemonice 3€
+
+INFOS : Uniquement à emporter. 75 Rue du Karting Saint-Denis. Ouvert Lun-Sam 9h30-19h30.
+
+Tu dois collecter dans l'ordre :
+1. Pour quelle heure (retrait)
+2. Ce qu'il veut commander
+3. Un extra (frites/boisson) ?
+4. Allergènes ?
+5. Son nom
+6. Son numéro de téléphone
+
+Quand tu as TOUTES ces infos, termine par exactement ce format JSON sur une ligne séparée :
+COMMANDE_JSON:{"nom":"...","tel":"...","plat":"...","extra":"...","allergie":"...","heure":"..."}
+
+Réponds toujours en français. Sois concis (2-3 phrases max par réponse). Ne pose qu'une question à la fois.`;
+
+let messages = [];
+let isListening = false;
+let isSpeaking = false;
+let recognition = null;
+let synth = window.speechSynthesis;
+let orderData = null;
+let conversationStarted = false;
+
+function setUIState(state) {
+  const ring = document.getElementById('avatar-ring');
+  const label = document.getElementById('avatar-label');
+  const wave = document.getElementById('wave-bars');
+  const btn = document.getElementById('main-btn');
+  const dot = document.getElementById('status-dot');
+  const btnIcon = document.getElementById('btn-icon');
+  const btnText = document.getElementById('btn-text');
+  const hint = document.getElementById('btn-hint');
+  const statusText = document.getElementById('status-text');
+
+  ring.className = 'avatar-ring ' + state;
+  label.className = 'avatar-label ' + state;
+  wave.className = 'wave-bars ' + state;
+
+  if (state === 'listening') {
+    btn.className = 'main-btn listening';
+    btnIcon.textContent = '⏹️';
+    btnText.textContent = 'En écoute... (appuie pour arrêter)';
+    hint.textContent = 'Je t\'écoute, parle normalement';
+    dot.className = 'dot listening';
+    statusText.textContent = 'En écoute...';
+    label.textContent = 'JE T\'ÉCOUTE';
+  } else if (state === 'speaking') {
+    btn.className = 'main-btn speaking';
+    btnIcon.textContent = '🔊';
+    btnText.textContent = 'L\'agent parle...';
+    hint.textContent = 'Attends qu\'il finisse de parler';
+    dot.className = 'dot speaking';
+    statusText.textContent = 'En train de parler';
+    label.textContent = 'JE RÉPONDS';
+  } else if (state === 'thinking') {
+    btn.className = 'main-btn thinking';
+    btnIcon.textContent = '⏳';
+    btnText.textContent = 'Réflexion en cours...';
+    hint.textContent = 'L\'agent analyse ta réponse';
+    dot.className = 'dot active';
+    statusText.textContent = 'Analyse...';
+    label.textContent = 'JE RÉFLÉCHIS';
+  } else {
+    btn.className = 'main-btn idle';
+    btnIcon.textContent = '🎙️';
+    btnText.textContent = 'Appuyer pour parler';
+    hint.textContent = 'Appuie et parle — l\'agent te répond à voix haute';
+    dot.className = 'dot active';
+    statusText.textContent = 'Agent prêt';
+    label.textContent = 'AGENT SUPRÊME';
+  }
+}
+
+function addMessage(text, role) {
+  const wrap = document.getElementById('convo-wrap');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function speak(text) {
+  return new Promise((resolve) => {
+    synth.cancel();
+    const clean = text.replace(/COMMANDE_JSON:.*$/m, '').trim();
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.lang = 'fr-FR';
+    utt.rate = 1.05;
+    utt.pitch = 1.0;
+
+    // Try to find a French voice
+    const voices = synth.getVoices();
+    const frVoice = voices.find(v => v.lang.startsWith('fr')) || voices[0];
+    if (frVoice) utt.voice = frVoice;
+
+    setUIState('speaking');
+    isSpeaking = true;
+
+    utt.onend = () => { isSpeaking = false; setUIState('idle'); resolve(); };
+    utt.onerror = () => { isSpeaking = false; setUIState('idle'); resolve(); };
+
+    synth.speak(utt);
+  });
+}
+
+async function sendToAI(userText) {
+  messages.push({ role: 'user', content: userText });
+  setUIState('thinking');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: SYSTEM_PROMPT,
+        messages: messages
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.content[0].text;
+    messages.push({ role: 'assistant', content: reply });
+
+    // Check for order JSON
+    const jsonMatch = reply.match(/COMMANDE_JSON:({.*})/);
+    if (jsonMatch) {
+      try {
+        orderData = JSON.parse(jsonMatch[1]);
+        saveOrder(orderData);
+      } catch(e) {}
+    }
+
+    const displayText = reply.replace(/COMMANDE_JSON:.*$/m, '').trim();
+    addMessage(displayText, 'ai');
+    await speak(displayText);
+
+    if (orderData) showOrderCard(orderData);
+
+  } catch(e) {
+    const errMsg = "Désolé, je rencontre un problème technique. Pouvez-vous répéter ?";
+    addMessage(errMsg, 'ai');
+    await speak(errMsg);
+    setUIState('idle');
+  }
+}
+
+function toggleListen() {
+  if (isSpeaking) { synth.cancel(); isSpeaking = false; }
+  if (isListening) { stopListen(); return; }
+
+  if (!conversationStarted) {
+    startConversation();
+    return;
+  }
+  startListen();
+}
+
+async function startConversation() {
+  conversationStarted = true;
+  const greeting = "Bonjour et bienvenue chez Suprême Saint-Denis ! Je suis votre assistant vocal. Pour quelle heure souhaitez-vous passer récupérer votre commande ?";
+  messages.push({ role: 'assistant', content: greeting });
+  addMessage(greeting, 'ai');
+  await speak(greeting);
+  startListen();
+}
+
+function startListen() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Reconnaissance vocale non disponible. Utilise Safari sur iPhone ou Chrome.');
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  isListening = true;
+  setUIState('listening');
+
+  recognition.onresult = async (e) => {
+    const text = e.results[0][0].transcript;
+    isListening = false;
+    addMessage(text, 'user');
+    await sendToAI(text);
+  };
+
+  recognition.onerror = () => { isListening = false; setUIState('idle'); };
+  recognition.onend = () => { if (isListening) { isListening = false; setUIState('idle'); } };
+  recognition.start();
+}
+
+function stopListen() {
+  isListening = false;
+  if (recognition) try { recognition.stop(); } catch(e){}
+  setUIState('idle');
+}
+
+function showOrderCard(order) {
+  const card = document.getElementById('order-card');
+  const details = document.getElementById('order-details');
+  card.classList.add('show');
+
+  const rows = [
+    ['Heure retrait', order.heure],
+    ['Plat', order.plat],
+    ['Extra', order.extra || null],
+    ['Allergie', order.allergie || null],
+    ['Nom', order.nom],
+    ['Téléphone', order.tel],
+  ].filter(([,v]) => v && v !== 'aucun' && v !== 'non');
+
+  details.innerHTML = rows.map(([k,v]) =>
+    `<div class="order-row"><span class="order-key">${k}</span><span class="order-val">${v}</span></div>`
+  ).join('');
+
+  document.getElementById('sent-tag').style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+}
+
+function saveOrder(order) {
+  const o = {
+    id: Date.now(),
+    numero: Math.floor(Math.random()*900)+100,
+    nom: order.nom,
+    tel: order.tel,
+    plat: order.plat,
+    extra: order.extra || null,
+    allergie: order.allergie || null,
+    heure: order.heure,
+    status: 'nouveau',
+    timestamp: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
+  };
+  const orders = JSON.parse(localStorage.getItem('supreme_orders') || '[]');
+  orders.unshift(o);
+  localStorage.setItem('supreme_orders', JSON.stringify(orders));
+}
+
+function resetConvo() {
+  messages = [];
+  orderData = null;
+  conversationStarted = false;
+  document.getElementById('convo-wrap').innerHTML = '';
+  document.getElementById('order-card').className = 'order-card';
+  document.getElementById('order-details').innerHTML = '';
+  document.getElementById('sent-tag').style.display = 'none';
+  synth.cancel();
+  if (recognition) try { recognition.stop(); } catch(e){}
+  isListening = false;
+  isSpeaking = false;
+  setUIState('idle');
+}
+
+// Load voices
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = () => synth.getVoices();
+</script>
+</body>
+</html>
