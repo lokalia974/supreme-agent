@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Suprême — Cuisine 👨‍🍳</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#111;--surface:#1C1C1C;--surface2:#252525;
+  --gold:#FFB800;--white:#F5F5F0;--muted:#555;
+  --green:#00C853;--red:#FF1744;--orange:#FF6D00;--border:rgba(255,255,255,0.07)
+}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px}
+.title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.subtitle{font-size:11px;color:var(--muted);margin-top:1px}
+.live{display:flex;align-items:center;gap:5px;background:rgba(255,23,68,0.15);border:1px solid rgba(255,23,68,0.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--red)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.stat{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
+.stat-l{font-size:10px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:0.5px}
+.filters{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;background:var(--bg)}
+.filters::-webkit-scrollbar{display:none}
+.filter{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.filter.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.orders{padding:10px 14px;display:grid;grid-template-columns:1fr;gap:10px;padding-bottom:30px}
+@media(min-width:600px){.orders{grid-template-columns:1fr 1fr}}
+.ticket{background:var(--surface);border-radius:16px;overflow:hidden;animation:slideDown 0.4s ease;border:1px solid var(--border)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+.ticket.nouveau{border-top:3px solid var(--gold);animation:slideDown 0.4s ease, flashborder 0.5s infinite}
+@keyframes flashborder{0%,100%{border-top-color:var(--gold)}50%{border-top-color:var(--red)}}
+.ticket.en-cours{border-top:3px solid var(--orange)}
+.ticket.pret{border-top:3px solid var(--green);opacity:0.75}
+.ticket-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ticket-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.ticket-time-wrap{text-align:right}
+.ticket-received{font-size:10px;color:var(--muted)}
+.ticket-pickup{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.ticket-pickup.urgent{color:var(--red)}
+.ticket-body{padding:12px 14px}
+.ticket-client{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.client-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.client-name{font-size:14px;font-weight:600}
+.client-tel{font-size:11px;color:var(--muted)}
+.ticket-items{background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.item-plat{font-size:15px;font-weight:700;margin-bottom:4px}
+.item-extra{font-size:13px;color:var(--muted);margin-bottom:4px}
+.allergie-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,184,0,0.12);border:1px solid rgba(255,184,0,0.25);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--gold);margin-top:6px}
+.ticket-actions{display:flex;gap:8px}
+.action-btn{flex:1;padding:11px;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-start{background:var(--orange);color:#fff;animation:btnpulse 0.8s infinite}
+@keyframes btnpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.btn-ready{background:var(--green);color:#fff}
+.btn-archive{background:var(--surface2);color:var(--muted);font-size:12px;flex:0;padding:11px 14px}
+.ticket-timer{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;background:var(--surface2);border-radius:8px;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.timer-val{font-family:'Syne',sans-serif;font-weight:700;color:var(--white)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:52px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty-sub{font-size:13px;line-height:1.6}
+.alert{position:fixed;top:0;left:0;right:0;background:var(--red);color:#fff;padding:14px 20px;text-align:center;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;z-index:999;transform:translateY(-100%);transition:transform 0.4s;display:flex;align-items:center;justify-content:center;gap:10px}
+.alert.show{transform:translateY(0)}
+.demo-btn{display:block;margin:0 14px 14px;padding:12px;background:rgba(255,184,0,0.1);border:1px dashed rgba(255,184,0,0.3);border-radius:12px;color:var(--gold);font-size:13px;font-weight:600;text-align:center;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* ENABLE AUDIO OVERLAY */
+.audio-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px}
+.audio-overlay.hidden{display:none}
+.audio-overlay h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center}
+.audio-overlay p{font-size:14px;color:var(--muted);text-align:center;line-height:1.6}
+.audio-start-btn{padding:16px 40px;background:var(--gold);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- AUDIO UNLOCK OVERLAY -->
+<div class="audio-overlay" id="audio-overlay">
+  <div style="font-size:52px">🔔</div>
+  <h2>Écran Cuisine<br>Suprême 974</h2>
+  <p>Appuie pour activer les alertes sonores — elles sonneront sans s'arrêter jusqu'à ce que la commande soit prise en charge !</p>
+  <button class="audio-start-btn" onclick="unlockAudio()">🚀 Activer l'écran cuisine</button>
+</div>
+
+<div class="alert" id="alert">🔔 NOUVELLE COMMANDE — APPUIE SUR COMMENCER !</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">👨‍🍳</div>
+    <div>
+      <div class="title">Cuisine — Suprême</div>
+      <div class="subtitle">Saint-Denis 974</div>
+    </div>
+  </div>
+  <div class="live"><div class="live-dot"></div>LIVE</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" style="color:var(--gold)" id="s-new">0</div><div class="stat-l">Nouvelles</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--orange)" id="s-cours">0</div><div class="stat-l">En cours</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--green)" id="s-pret">0</div><div class="stat-l">Prêtes</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--muted)" id="s-total">0</div><div class="stat-l">Total</div></div>
+</div>
+
+<div class="filters">
+  <div class="filter active" onclick="setFilter('all',this)">🍽️ Tout</div>
+  <div class="filter" onclick="setFilter('nouveau',this)">🆕 Nouvelles</div>
+  <div class="filter" onclick="setFilter('en-cours',this)">🔥 En cours</div>
+  <div class="filter" onclick="setFilter('pret',this)">✅ Prêtes</div>
+</div>
+
+<button class="demo-btn" onclick="addFakeOrder()">➕ Simuler une commande (démo)</button>
+
+<div class="orders" id="orders"></div>
+
+<script>
+let orders = [];
+let filter = 'all';
+let prevCount = 0;
+let audioCtx = null;
+let alarmInterval = null;
+let audioUnlocked = false;
+
+function unlockAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioUnlocked = true;
+  document.getElementById('audio-overlay').classList.add('hidden');
+  load();
+  prevCount = orders.length;
+  render();
+}
+
+function playAlarm() {
+  if (!audioCtx || !audioUnlocked) return;
+  // Play 3 ascending beeps
+  [0, 0.2, 0.4].forEach((delay, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = [880, 1100, 1320][i];
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.35);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + 0.35);
+  });
+}
+
+function startAlarm() {
+  if (alarmInterval) return;
+  playAlarm();
+  alarmInterval = setInterval(() => {
+    // Check if there are still new orders
+    const hasNew = orders.filter(o => o.status === 'nouveau').length > 0;
+    if (hasNew) {
+      playAlarm();
+    } else {
+      stopAlarm();
+    }
+  }, 1500);
+}
+
+function stopAlarm() {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  document.getElementById('alert').classList.remove('show');
+}
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.filter').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function load() {
+  const s = localStorage.getItem('supreme_orders');
+  if (s) orders = JSON.parse(s);
+}
+
+function save() {
+  localStorage.setItem('supreme_orders', JSON.stringify(orders));
+}
+
+function updateStats() {
+  document.getElementById('s-new').textContent = orders.filter(o=>o.status==='nouveau').length;
+  document.getElementById('s-cours').textContent = orders.filter(o=>o.status==='en-cours').length;
+  document.getElementById('s-pret').textContent = orders.filter(o=>o.status==='pret').length;
+  document.getElementById('s-total').textContent = orders.filter(o=>o.status!=='archive').length;
+}
+
+function setStatus(id, status) {
+  const o = orders.find(x=>x.id===id);
+  if (!o) return;
+  o.status = status;
+  if (status === 'en-cours') {
+    o.startTime = Date.now();
+    // Check if no more new orders → stop alarm
+    const stillNew = orders.filter(x => x.status === 'nouveau').length;
+    if (stillNew === 0) stopAlarm();
+  }
+  save();
+  render();
+}
+
+function render() {
+  updateStats();
+  let list = [...orders];
+  if (filter !== 'all') list = list.filter(o => o.status === filter);
+  list = list.filter(o => o.status !== 'archive');
+
+  const el = document.getElementById('orders');
+
+  if (!list.length) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-icon">🍽️</div>
+      <div class="empty-title">Aucune commande</div>
+      <div class="empty-sub">Les commandes de l'agent IA<br>apparaîtront ici automatiquement</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(o => {
+    const isUrgent = o.heure === 'Dès que possible ⚡';
+    let actions = '';
+    if (o.status === 'nouveau') {
+      actions = `<button class="action-btn btn-start" onclick="setStatus(${o.id},'en-cours')">🔥 COMMENCER</button>
+                 <button class="action-btn btn-archive" onclick="setStatus(${o.id},'archive')">🗑️</button>`;
+    } else if (o.status === 'en-cours') {
+      const elapsed = o.startTime ? Math.floor((Date.now() - o.startTime) / 60000) : 0;
+      actions = `<button class="action-btn btn-ready" onclick="setStatus(${o.id},'pret')">✅ COMMANDE PRÊTE !</button>`;
+    } else {
+      actions = `<button class="action-btn btn-archive" onclick="setStatus(${o.id},'archive')" style="flex:1">🗑️ Archiver</button>`;
+    }
+
+    const elapsed = o.startTime ? Math.floor((Date.now() - o.startTime) / 60000) : null;
+
+    return `<div class="ticket ${o.status}">
+      <div class="ticket-header">
+        <div>
+          <div class="ticket-num">#${o.numero}</div>
+          <div style="font-size:10px;color:var(--muted)">Reçu à ${o.timestamp}</div>
+        </div>
+        <div class="ticket-time-wrap">
+          <div class="ticket-received">Retrait prévu</div>
+          <div class="ticket-pickup ${isUrgent?'urgent':'normal'}">${o.heure}</div>
+        </div>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-client">
+          <div class="client-avatar">👤</div>
+          <div>
+            <div class="client-name">${o.nom || 'Client'}</div>
+            <div class="client-tel">${o.tel || '—'}</div>
+          </div>
+        </div>
+        ${elapsed !== null ? `<div class="ticket-timer">⏱ En préparation depuis <span class="timer-val">${elapsed} min</span></div>` : ''}
+        <div class="ticket-items">
+          <div class="item-plat">🍽️ ${o.plat || '—'}</div>
+          ${o.extra ? `<div class="item-extra">➕ ${o.extra}</div>` : ''}
+          ${o.allergie ? `<div class="allergie-tag">⚠️ ALLERGIE : ${o.allergie}</div>` : ''}
+        </div>
+        <div class="ticket-actions">${actions}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addFakeOrder() {
+  const plats = ['🥙 Kebab Berliner', '🌯 Tacos Chèvre Miel', '🍔 Burger Maison', '🥙 Dürüm', '🍗 Chicken Tenders'];
+  const extras = ['🍟 Frites', '🥤 Coca Cola', null, null];
+  const heures = ['Dès que possible ⚡', 'Dans 15 min', 'Dans 30 min', '12h30', '19h00'];
+  const noms = ['Karim N.', 'Marie D.', 'Sophie L.', 'Jean P.', 'Fatima B.'];
+  const tels = ['0692 45 67 89', '0693 12 34 56', '0692 98 76 54', '0693 55 44 33', '0692 11 22 33'];
+  const allergies = [null, null, null, '🌾 Gluten', '🥛 Lactose'];
+  const idx = Math.floor(Math.random() * 5);
+  const order = {
+    id: Date.now(),
+    numero: Math.floor(Math.random()*900)+100,
+    nom: noms[idx],
+    tel: tels[idx],
+    plat: plats[Math.floor(Math.random()*plats.length)],
+    extra: extras[Math.floor(Math.random()*extras.length)],
+    allergie: allergies[Math.floor(Math.random()*allergies.length)],
+    heure: heures[Math.floor(Math.random()*heures.length)],
+    status: 'nouveau',
+    timestamp: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
+  };
+  orders.unshift(order);
+  save();
+  document.getElementById('alert').classList.add('show');
+  startAlarm();
+  render();
+}
+
+function poll() {
+  if (!audioUnlocked) return;
+  const prev = orders.length;
+  load();
+  if (orders.length > prev) {
+    document.getElementById('alert').classList.add('show');
+    startAlarm();
+  }
+  render();
+}
+
+setInterval(poll, 2000);
+setInterval(render, 30000);
+</script>
+</body>
+</html>
