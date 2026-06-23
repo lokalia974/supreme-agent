@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Suprême — Cuisine Live 👨‍🍳</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#111;--surface:#1C1C1C;--surface2:#252525;--gold:#FFB800;--white:#F5F5F0;--muted:#555;--green:#00C853;--red:#FF1744;--orange:#FF6D00;--border:rgba(255,255,255,0.07)}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px}
+.title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.subtitle{font-size:11px;color:var(--muted);margin-top:1px}
+.live{display:flex;align-items:center;gap:5px;background:rgba(255,23,68,0.15);border:1px solid rgba(255,23,68,0.3);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--red)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.stat{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
+.stat-l{font-size:10px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:0.5px}
+
+.filters{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filter{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.filter.active{background:var(--gold);color:#000;border-color:var(--gold)}
+
+.orders{padding:10px 14px;display:grid;grid-template-columns:1fr;gap:10px;padding-bottom:30px}
+@media(min-width:600px){.orders{grid-template-columns:1fr 1fr}}
+
+.ticket{background:var(--surface);border-radius:16px;overflow:hidden;animation:slideDown 0.4s ease;border:1px solid var(--border)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+.ticket.nouveau{border-top:3px solid var(--gold);animation:slideDown 0.4s ease, flashborder 0.5s infinite}
+@keyframes flashborder{0%,100%{border-top-color:var(--gold)}50%{border-top-color:var(--red)}}
+.ticket.en-cours{border-top:3px solid var(--orange)}
+.ticket.pret{border-top:3px solid var(--green);opacity:0.75}
+
+.ticket-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ticket-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.ticket-time-wrap{text-align:right}
+.ticket-received{font-size:10px;color:var(--muted)}
+.ticket-pickup{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.ticket-pickup.urgent{color:var(--red)}
+
+.ticket-body{padding:12px 14px}
+.ticket-client{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.client-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.client-name{font-size:14px;font-weight:600}
+.client-tel{font-size:11px;color:var(--muted)}
+
+.ticket-items{background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.item-plat{font-size:15px;font-weight:700;margin-bottom:4px}
+.item-extra{font-size:13px;color:var(--muted);margin-bottom:4px}
+.allergie-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,184,0,0.12);border:1px solid rgba(255,184,0,0.25);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--gold);margin-top:6px}
+
+.ticket-actions{display:flex;gap:8px}
+.action-btn{flex:1;padding:11px;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-start{background:var(--orange);color:#fff;animation:btnpulse 0.8s infinite}
+@keyframes btnpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.btn-ready{background:var(--green);color:#fff}
+.btn-archive{background:var(--surface2);color:var(--muted);font-size:12px;flex:0;padding:11px 14px}
+
+.ticket-timer{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;background:var(--surface2);border-radius:8px;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.timer-val{font-family:'Syne',sans-serif;font-weight:700;color:var(--white)}
+
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:52px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty-sub{font-size:13px;line-height:1.6}
+
+.alert{position:fixed;top:0;left:0;right:0;background:var(--red);color:#fff;padding:14px 20px;text-align:center;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;z-index:999;transform:translateY(-100%);transition:transform 0.4s}
+.alert.show{transform:translateY(0)}
+
+.audio-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px}
+.audio-overlay.hidden{display:none}
+.audio-overlay h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center}
+.audio-overlay p{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;max-width:300px}
+.audio-start-btn{padding:16px 40px;background:var(--gold);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer}
+
+.connection-status{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;margin:8px 14px 0}
+.connection-status.connected{background:rgba(0,200,83,0.15);color:var(--green)}
+.connection-status.disconnected{background:rgba(255,23,68,0.15);color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="audio-overlay" id="audio-overlay">
+  <div style="font-size:52px">🔔</div>
+  <h2>Écran Cuisine<br>Suprême 974</h2>
+  <p>Les commandes arrivent automatiquement depuis l'agent IA — le son ne s'arrête pas tant que tu n'as pas appuyé sur COMMENCER !</p>
+  <button class="audio-start-btn" onclick="unlockAudio()">🚀 Activer l'écran cuisine</button>
+</div>
+
+<div class="alert" id="alert">🔔 NOUVELLE COMMANDE — APPUIE SUR COMMENCER !</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">👨‍🍳</div>
+    <div>
+      <div class="title">Cuisine — Suprême</div>
+      <div class="subtitle">Saint-Denis 974</div>
+    </div>
+  </div>
+  <div class="live"><div class="live-dot"></div>LIVE</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" style="color:var(--gold)" id="s-new">0</div><div class="stat-l">Nouvelles</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--orange)" id="s-cours">0</div><div class="stat-l">En cours</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--green)" id="s-pret">0</div><div class="stat-l">Prêtes</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--muted)" id="s-total">0</div><div class="stat-l">Total</div></div>
+</div>
+
+<div id="connection-bar"></div>
+
+<div class="filters">
+  <div class="filter active" onclick="setFilter('all',this)">🍽️ Tout</div>
+  <div class="filter" onclick="setFilter('nouveau',this)">🆕 Nouvelles</div>
+  <div class="filter" onclick="setFilter('en-cours',this)">🔥 En cours</div>
+  <div class="filter" onclick="setFilter('pret',this)">✅ Prêtes</div>
+</div>
+
+<div class="orders" id="orders"></div>
+
+<script>
+// ============ CONFIG SUPABASE ============
+const SUPABASE_URL = 'https://bwicdllhbzbvphagcpgz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3aWNkbGxoYnpidnBoYWdjcGd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjQ3MjIsImV4cCI6MjA5NjQwMDcyMn0._I7a2bJ8LfAgVMlDZjco5kqCKgIh6prqHhMFSiiWuFc';
+// ========================================
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let orders = [];
+let filter = 'all';
+let audioCtx = null;
+let alarmInterval = null;
+let audioUnlocked = false;
+
+function unlockAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioUnlocked = true;
+  document.getElementById('audio-overlay').classList.add('hidden');
+  loadOrders();
+  subscribeToOrders();
+}
+
+function playAlarm() {
+  if (!audioCtx || !audioUnlocked) return;
+  [0, 0.2, 0.4].forEach((delay, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = [880, 1100, 1320][i];
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.35);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + 0.35);
+  });
+}
+
+function startAlarm() {
+  if (alarmInterval) return;
+  playAlarm();
+  alarmInterval = setInterval(() => {
+    const hasNew = orders.filter(o => o.status === 'nouveau').length > 0;
+    if (hasNew) playAlarm();
+    else stopAlarm();
+  }, 1500);
+}
+
+function stopAlarm() {
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+  document.getElementById('alert').classList.remove('show');
+}
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.filter').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+async function loadOrders() {
+  const { data, error } = await db.from('commandes').select('*').order('created_at', { ascending: false });
+  if (data) { orders = data.filter(o => o.status !== 'archive'); render(); }
+}
+
+function subscribeToOrders() {
+  db.channel('commandes-changes')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'commandes' }, (payload) => {
+      orders.unshift(payload.new);
+      document.getElementById('alert').classList.add('show');
+      startAlarm();
+      render();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commandes' }, (payload) => {
+      const idx = orders.findIndex(o => o.id === payload.new.id);
+      if (idx !== -1) orders[idx] = payload.new;
+      if (orders.filter(o => o.status === 'nouveau').length === 0) stopAlarm();
+      render();
+    })
+    .subscribe((status) => {
+      const bar = document.getElementById('connection-bar');
+      if (status === 'SUBSCRIBED') {
+        bar.innerHTML = '<div class="connection-status connected">● Connecté en temps réel — Supabase</div>';
+      } else {
+        bar.innerHTML = '<div class="connection-status disconnected">● Connexion en cours...</div>';
+      }
+    });
+}
+
+async function setStatus(id, status) {
+  const update = { status };
+  if (status === 'en-cours') update.start_time = new Date().toISOString();
+  // Update locally immediately
+  const idx = orders.findIndex(o => o.id === id);
+  if (idx !== -1) {
+    orders[idx].status = status;
+    if (status === 'en-cours') orders[idx].start_time = new Date().toISOString();
+    if (status === 'archive') orders.splice(idx, 1);
+  }
+  if (orders.filter(o => o.status === 'nouveau').length === 0) stopAlarm();
+  render();
+  // Then update Supabase
+  await db.from('commandes').update(update).eq('id', id);
+}
+
+// Event delegation for dynamically generated buttons
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button[data-id]');
+  if (!btn) return;
+  const id = parseInt(btn.dataset.id);
+  const action = btn.dataset.action;
+  if (id && action) setStatus(id, action);
+});
+
+function updateStats() {
+  document.getElementById('s-new').textContent = orders.filter(o=>o.status==='nouveau').length;
+  document.getElementById('s-cours').textContent = orders.filter(o=>o.status==='en-cours').length;
+  document.getElementById('s-pret').textContent = orders.filter(o=>o.status==='pret').length;
+  document.getElementById('s-total').textContent = orders.filter(o=>o.status!=='archive').length;
+}
+
+function makeBtn(label, cls, id, action, extraStyle='') {
+  const btn = document.createElement('button');
+  btn.className = 'action-btn ' + cls;
+  btn.textContent = label;
+  if (extraStyle) btn.style.cssText = extraStyle;
+  btn.addEventListener('click', () => setStatus(id, action));
+  return btn;
+}
+
+function renderTicket(o) {
+  const isUrgent = o.heure === 'Dès que possible ⚡';
+  const elapsed = o.start_time ? Math.floor((Date.now() - new Date(o.start_time)) / 60000) : null;
+  const time = o.timestamp || (o.created_at ? new Date(o.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+
+  const card = document.createElement('div');
+  card.className = 'ticket ' + o.status;
+
+  card.innerHTML = `
+    <div class="ticket-header">
+      <div><div class="ticket-num">#${o.numero || Math.floor(Math.random()*900)+100}</div><div style="font-size:10px;color:var(--muted)">Reçu à ${time}</div></div>
+      <div class="ticket-time-wrap"><div class="ticket-received">Retrait prévu</div><div class="ticket-pickup ${isUrgent?'urgent':'normal'}">${o.heure || '—'}</div></div>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-client">
+        <div class="client-avatar">👤</div>
+        <div><div class="client-name">${o.nom || 'Client'}</div><div class="client-tel">${o.tel || '—'}</div></div>
+      </div>
+      ${elapsed !== null ? `<div class="ticket-timer">⏱ En préparation depuis <span class="timer-val">${elapsed} min</span></div>` : ''}
+      <div class="ticket-items">
+        <div class="item-plat">🍽️ ${o.plat || '—'}</div>
+        ${o.extra ? `<div class="item-extra">➕ ${o.extra}</div>` : ''}
+        ${o.allergie ? `<div class="allergie-tag">⚠️ ALLERGIE : ${o.allergie}</div>` : ''}
+      </div>
+      <div class="ticket-actions" id="actions-${o.id}"></div>
+    </div>`;
+
+  const actionsEl = card.querySelector('#actions-' + o.id);
+  if (o.status === 'nouveau') {
+    actionsEl.appendChild(makeBtn('🔥 COMMENCER', 'btn-start', o.id, 'en-cours'));
+    actionsEl.appendChild(makeBtn('🗑️', 'btn-archive', o.id, 'archive'));
+  } else if (o.status === 'en-cours') {
+    actionsEl.appendChild(makeBtn('✅ COMMANDE PRÊTE !', 'btn-ready', o.id, 'pret'));
+  } else {
+    actionsEl.appendChild(makeBtn('🗑️ Archiver', 'btn-archive', o.id, 'archive', 'flex:1'));
+  }
+
+  return card;
+}
+
+function render() {
+  updateStats();
+  let list = [...orders].filter(o => o.status !== 'archive');
+  if (filter !== 'all') list = list.filter(o => o.status === filter);
+
+  const el = document.getElementById('orders');
+  el.innerHTML = '';
+
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-title">Aucune commande</div><div class="empty-sub">Les commandes de l'agent IA apparaîtront ici automatiquement</div></div>`;
+    return;
+  }
+
+  list.forEach(o => el.appendChild(renderTicket(o)));
+}
+
+
+
+setInterval(render, 30000);
+</script>
+</body>
+</html>
